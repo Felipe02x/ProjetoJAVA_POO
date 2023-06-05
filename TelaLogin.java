@@ -4,86 +4,118 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.*;
 
 public class TelaLogin extends JFrame {
-
-    private JTextField textFieldUsuario;
-    private JPasswordField passwordFieldSenha;
+    private JTextField txtUsuario;
+    private JPasswordField txtSenha;
 
     public TelaLogin() {
-        initComponents();
-    }
-
-    private void initComponents() {
+        // Configurações da janela
         setTitle("Tela de Login");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(300, 200);
         setResizable(false);
-        setBackground(Color.GREEN);
+        setLocationRelativeTo(null);
+        getContentPane().setBackground(new Color(153, 0, 255)); // Define o fundo roxo
 
-        JPanel panel = new JPanel(new GridBagLayout());
-        getContentPane().add(panel);
+        // Criação dos componentes
+        JLabel lblUsuario = new JLabel("Usuário:");
+        JLabel lblSenha = new JLabel("Senha:");
+        txtUsuario = new JTextField(10);
+        txtSenha = new JPasswordField(10);
+        JButton btnLogin = new JButton("Login");
+        
 
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.insets = new Insets(10, 10, 10, 10);
+        // Configuração do layout
+        setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS)); // Altera para BoxLayout na direção vertical
+        add(lblUsuario);
+        txtUsuario.setForeground(new Color(153, 0, 255)); // Configura a cor roxa do campo de usuário
+        add(txtUsuario);
+        add(lblSenha);
+        txtSenha.setForeground(new Color(153, 0, 255)); // Configura a cor roxa do campo de senha
+        add(txtSenha);
+        add(btnLogin);
 
-        JLabel labelUsuario = new JLabel("Usuário:");
-        constraints.gridx = 0;
-        constraints.gridy = 0;
-        panel.add(labelUsuario, constraints);
+        // Evento de clique no botão de login
+        //btnLogin.addActionListener(e -> btnLoginAc());
 
-        textFieldUsuario = new JTextField(20);
-        constraints.gridx = 1;
-        panel.add(textFieldUsuario, constraints);
+        
 
-        JLabel labelSenha = new JLabel("Senha:");
-        constraints.gridy = 1;
-        panel.add(labelSenha, constraints);
-
-        passwordFieldSenha = new JPasswordField(20);
-        constraints.gridy = 2;
-        panel.add(passwordFieldSenha, constraints);
-
-        JButton buttonLogin = new JButton("Login");
-        constraints.gridx = 0;
-        constraints.gridy = 3;
-        constraints.gridwidth = 2;
-        constraints.anchor = GridBagConstraints.CENTER;
-        buttonLogin.addActionListener(new ActionListener() {
+        btnLogin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String usuario = textFieldUsuario.getText();
-                String senha = new String(passwordFieldSenha.getPassword());
+                String usuario = txtUsuario.getText();
+                String senha = new String(txtSenha.getPassword());
 
                 if (validarLogin(usuario, senha)) {
-                    JOptionPane.showMessageDialog(TelaLogin.this, "Login válido!");
-                    // Direcione para o menu inicial aqui
-                    dispose(); // Fechar a tela de login após o login bem-sucedido
+                    JOptionPane.showMessageDialog(null, "Login bem-sucedido!");
+                    TelaMenuInicial telaMenuInicial = new TelaMenuInicial();
+                    telaMenuInicial.setVisible(true);
                 } else {
-                    JOptionPane.showMessageDialog(TelaLogin.this, "Login inválido! Tente novamente.");
-                    textFieldUsuario.setText("");
-                    passwordFieldSenha.setText("");
+                    int resposta = JOptionPane.showConfirmDialog(null, "Usuário não encontrado. Deseja realizar o cadastro?");
+                    if (resposta == JOptionPane.YES_OPTION) {
+                        realizarCadastro(usuario, senha);
+                        Funcionario funcionario = new Funcionario(); 
+                        funcionario.setVisible(true);
+                    }
                 }
             }
         });
-        panel.add(buttonLogin, constraints);
+    }
+    
 
-        pack();
-        setLocationRelativeTo(null);
+    // Método para validar o login consultando o banco de dados
+    private boolean validarLogin(String usuario, String senha) {
+        String url = "jdbc:mysql://localhost:3306/projetopoo";
+        String username = "root";
+        String password = "Felipe12@";
+
+        try (Connection conn = DriverManager.getConnection(url, username, password)) {
+            String query = "SELECT * FROM usuarios WHERE usuario = ? AND senha = ?";
+            PreparedStatement statement = conn.prepareStatement(query);
+            statement.setString(1, usuario);
+            statement.setString(2, senha);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            return resultSet.next(); // Retorna true se houver uma linha correspondente no resultado da consulta
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false; // Em caso de erro, retorna false
+        }
     }
 
-    private boolean validarLogin(String usuario, String senha) {
-        // Lógica para validar o login
-        // Aqui você pode realizar as verificações necessárias, como consultar um banco de dados, etc.
-        // Neste exemplo, estou verificando se o usuário é "admin" e a senha é "12345".
-        return usuario.equals("admin") && senha.equals("12345");
+    // Método para realizar o cadastro de um novo usuário
+    private void realizarCadastro(String usuario, String senha) {
+        
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                TelaLogin telaLogin = new TelaLogin();
-                telaLogin.setVisible(true);
+                try {
+                    Class.forName("com.mysql.jdbc.Driver");
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                    return;
+                }
+    
+                new TelaLogin().setVisible(true);
             }
         });
     }
 }
+
+
+
+   
+
+
+
+
+
+
+
+
+       
